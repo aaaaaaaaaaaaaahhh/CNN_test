@@ -21,6 +21,8 @@ import matplotlib.pyplot as plt
 #    a. layer 3 weights are on different scale than layer 4 weights and conv layer kernels.Why?
 # - conv layer weights are repeating.why?
 #    a. each f_num layer in the weights is the same, i.e.all the values are the same
+#    b. conv_1 filters are the same as the corresponding starting filter
+#    c. conv_2 filters are different from the starting filter but same as each other
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
@@ -149,12 +151,12 @@ guesses = []
 accuracies = []
 errors = []
 
+initial = np.copy(conv_1.filters)
 
-initial = np.copy(conv_2.filters)
 e = 5
 lr = .01
 for i in range(e):
-    conv_1_weights = np.copy(layer_4.weights)
+    weights_to_check = np.copy(layer_4.weights)
     for l in range(np.shape(x_train)[0]):
         conv_1_out = conv_1.forward(x_train[l])
         relu_1_out = relu_1.forward(conv_1_out)
@@ -164,7 +166,6 @@ for i in range(e):
         maxl_2_out = maxl_2.forward(relu_2_out)
         reshape_2_out = reshape_2.forward(maxl_2_out)
         layer_3_out = layer_3.linear(True)
-        rshpe = np.copy(conv_2.filters)
         # print("z in dense", layer_3.z)
         # print("weights in dense", layer_3.weights)
         layer_3_out = layer_3.reLU(layer_3_out)
@@ -199,25 +200,23 @@ for i in range(e):
         layer_1_d = maxl_1.backward()
         layer_1_d = relu_1.backward(layer_1_d)
         layer_1_d = conv_1.backward(layer_1_d, lr)
-        print("change in weights", conv_1_weights - layer_4.weights)
+        focussed_layer = np.copy(conv_1.filters)
+        print("change in weights", weights_to_check - layer_4.weights)
 
 # print("right guesses", right_guesses)
 print("percentage of guesses right", right_guesses / e)
 print(accuracies)
 print("errors", errors)
 print("guesses", guesses)
-print(rshpe[2])
-print(initial[2])
-print(np.amax(rshpe[0]))
-print(initial[0]-rshpe[0])
+print(initial[0]-focussed_layer[0])
 
 
 f = plt.figure("x_train")
 plt.imshow(x_train[-1][-1], cmap="gray")
-g = plt.figure("rshpe")
-plt.imshow(rshpe[0][0], cmap="gray")
+g = plt.figure("focussed_layer")
+plt.imshow(focussed_layer[0][0], cmap="gray")
 h = plt.figure("rshpe2")
-plt.imshow(rshpe[1][0], cmap="gray")
+plt.imshow(initial[0][0], cmap="gray")
 plt.show()
 
 
@@ -225,9 +224,5 @@ plt.show()
 # print(conv_1_weights)
 # print("change in weights", conv_1_weights-conv_1.filters)
 
-# mean squared error
-# seed:1, acc = .17451, loss = 1.2974 [[8.54134221e-05 1.96693470e-03 1.44271000e-03 2.89761719e-03 1.68453654e-03 9.72082115e-01 6.39127778e-03 1.32636301e-02 2.37834081e-05 1.61981723e-04]]
-# seed:2, acc = .11956, loss = .11683 [[0.53257254 0.00750029 0.00812264 0.00187652 0.32153626 0.005410330.02981503 0.00540849 0.00106279 0.0866951 ]]
-# seed:3, acc = .10031, loss = .19757 [[0.29905525 0.28281579 0.00576029 0.0271469  0.05572301 0.04542031 0.01988347 0.1045927  0.12295437 0.03664791]]
 
 # print("accuracy(lower the better)", np.mean((layer_4_out-Y)**2))
